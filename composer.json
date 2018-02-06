@@ -1,0 +1,25 @@
+{
+    "name": "gabrielcesar95/google_calendar",
+    "description": "API de comunicacao com o Google Calendar",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Gabriel Cesar Mello",
+            "email": "95gabrielcesar@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "google/apiclient": "^2.0"
+    },
+    "config": {
+        "vendor-dir": "ext_lib"
+    },
+    "autoload": {
+        "psr-4": {
+            "Model\\": "Source/Models/",
+            "CRUD\\": "Source/Crud/"
+        }
+    }
+}
