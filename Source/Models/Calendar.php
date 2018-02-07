@@ -23,12 +23,6 @@ class Calendar {
      * @throws \Google_Exception
      */
     public function __construct() {
-
-        define('APPLICATION_NAME', 'Play - Integração com Calendar');
-        define('CREDENTIALS_PATH', '~/public/.credentials/calendar-php-credentials.json');
-        define('CLIENT_SECRET_PATH', __DIR__ . '/../../client_secret.json');
-        define('SCOPES', implode(' ', [\Google_Service_Calendar::CALENDAR]));
-
         $this->client = new \Google_Client();
         $this->client->setApplicationName(APPLICATION_NAME);
         $this->client->setScopes(SCOPES);
@@ -61,16 +55,6 @@ class Calendar {
      */
     public function setAccessToken($authCode) {
         $accessToken = $this->client->fetchAccessTokenWithAuthCode($authCode);
-
-
-        // Retorna o caminho absoluto
-//        $credentialsPath = $this->expandHomeDirectory(CREDENTIALS_PATH);
-        // Cria o diretório de forma recursiva para armazenar o .json
-//        if (!file_exists(dirname($credentialsPath))) {
-//            mkdir(dirname($credentialsPath), 0700, true);
-//        }
-        // Salva o credenciamento dentro da pasta
-//        file_put_contents($credentialsPath, json_encode($accessToken));
         return true;
     }
 
@@ -131,27 +115,6 @@ class Calendar {
 
             return $error;
         }
-
-
-
-
-
-//        $credentialsPath = $this->expandHomeDirectory(CREDENTIALS_PATH);
-//        if (!file_exists($credentialsPath)) {
-//            $this->trigger = 'Não há credenciais definidas!';
-//            return false;
-//        } else {
-////            $accessToken = json_decode(file_get_contents($credentialsPath), true);
-//
-//            $this->client->setAccessToken($accessToken);
-//        }
-//
-//        // Refresh the token if it's expired.
-//        if ($this->client->isAccessTokenExpired()) {
-//            $this->client->fetchAccessTokenWithRefreshToken($this->client->getRefreshToken());
-//            file_put_contents($credentialsPath, json_encode($this->client->getAccessToken()));
-//        }
-//        return $this->client;
     }
 
     /**
@@ -219,19 +182,6 @@ class Calendar {
     public function deleteEvent($eventId) {
         $this->service = new \Google_Service_Calendar($this->client);
         $this->service->events->delete('primary', $eventId, ['sendNotifications' => true]);
-    }
-
-    /**
-     * <b>expandHomeDirectory:</b> Método responsável por expandir o diretório e normalizar o caminho absoluto
-     * @param STRING $path = Caminho que deseja ser verificado
-     * @return mixed
-     */
-    private function expandHomeDirectory($path) {
-        $homeDirectory = getenv('HOME');
-        if (empty($homeDirectory)) {
-            $homeDirectory = getenv('HOMEDRIVE') . getenv('HOMEPATH');
-        }
-        return str_replace('~', realpath($homeDirectory), $path);
     }
 
 }

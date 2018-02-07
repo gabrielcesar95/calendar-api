@@ -6,7 +6,7 @@
  * Date: 21/12/2017
  * Time: 09:53
  */
-require_once __DIR__ . '/Config.inc.php';
+require_once __DIR__ . '/Config.php';
 
 $postData = filter_input_array(INPUT_POST, FILTER_DEFAULT);
 $case = $postData['action'];

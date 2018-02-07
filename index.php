@@ -1,7 +1,7 @@
 <?php
 
 
-require_once __DIR__ . '/Config.inc.php';
+require_once __DIR__ . '/Config.php';
 
 $url = filter_input(INPUT_GET, 'url', FILTER_DEFAULT);
 $url = explode('/', $url);
