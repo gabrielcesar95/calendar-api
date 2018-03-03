@@ -1,12 +1,4 @@
 <?php
-
-/**
- * Created by PhpStorm.
- * User: gustavoweb
- * Date: 14/12/2017
- * Time: 16:27
- */
-
 namespace Model;
 
 class Calendar {
@@ -28,6 +20,37 @@ class Calendar {
         $this->client->setScopes(SCOPES);
         $this->client->setAuthConfig(CLIENT_SECRET_PATH);
         $this->client->setAccessType('offline');
+    }
+
+    /**
+     * <b>setError:</b> Método resposável por exibir erro (front-end) e parar a execução do código, se solicitado
+     * @param STRING $Message
+     * @param CONSTANT(E_USER) $Type
+     * @param BOOL $Die
+     */
+    private function showError($Message, $Type, $Die = false) {
+        $CssClass = '';
+
+        switch ($Type) {
+            case E_USER_NOTICE:
+                $CssClass = CALENDAR_ERROR[INFO];
+                break;
+            case E_USER_WARNING:
+            case E_USER_DEPRECATED:
+                $CssClass = CALENDAR_ERROR[WARNING];
+
+                break;
+            case E_USER_ERROR:
+                $CssClass = CALENDAR_ERROR[ERROR];
+
+                break;
+        }
+
+        echo "<div class=\"{$CssClass}\">{$Message}</div>";
+
+        if ($Die) {
+            die;
+        }
     }
 
     /**
@@ -53,7 +76,7 @@ class Calendar {
      * @param $authCode
      * @return bool
      */
-    public function setAccessToken($authCode) {
+    public function fetchAccessToken($authCode) {
         $accessToken = $this->client->fetchAccessTokenWithAuthCode($authCode);
         return true;
     }
@@ -66,12 +89,8 @@ class Calendar {
     public function validateAuth($code) {
         $validate = $this->client->authenticate($code);
         if (isset($validate['error']) && $validate['error']) {
-            //enviar email para o adm sobre o erro
-
             unset($validate);
             return false;
-        } elseif (!isset($validate['refresh_roken'])) {
-            //exibir erro (Acesso disponivel apenas por uma hora)
         }
         unset($validate);
         return true;
@@ -79,41 +98,36 @@ class Calendar {
 
     /**
      * <b>getClient:</b> Método responsável por obter o client do Google
-     * @return bool|\Google_Client
+     * @param STRING $AccessToken
+     * access_token recebido por <i>auth.php</i> ou armazenado no banco de dados
+     * @param STRING $RefreshToken
+     * refresh_token recebido por <i>auth.php</i> ou armazenado no banco de dados
+     * @return BOOL|\Google_Client
      */
-    public function getClient() {
-        $error = new \stdClass();
-
-        //PEGAR ID DO USUARIO NA SESSAO
-        $userId = $_SESSION['id'];
-
-
-        if (isset($userId) && $userId) {
-            $read = new \CRUD\Read();
-            $read->read('user_tokens', 'WHERE id_user = :id', "id={$userId}");
-            if ($read->getRowCount()) {
-                $userauth = $read->getResult()[0];
-                unset($userauth['id']);
-                unset($userauth['id_user']);
-
-                $accessToken = $this->client->fetchAccessTokenWithAuthCode(json_encode($userauth));
-
-                $this->client->setAccessToken(json_encode($userauth));
+    public function getClient($AccessToken = null, $RefreshToken = null) {
+        if ($AccessToken && $RefreshToken) {
+            $Tokens = [
+                'access_token' => $AccessToken,
+                'refresh_token' => $RefreshToken
+            ];
+            $this->fetchAccessToken(json_encode($Tokens));
+            $this->client->setAccessToken(json_encode($Tokens));
+            return $this->client;
+        } else {
+            if ($AccessToken) {
+                $Tokens = [
+                    'access_token' => $AccessToken,
+                ];
+                $this->fetchAccessToken(json_encode($Tokens));
+                $this->client->setAccessToken(json_encode($Tokens));
+                if (!$RefreshToken) {
+                    $this->showError('Token de atualização não recebido.', E_USER_WARNING);
+                }
                 return $this->client;
             } else {
-                $error->error = [
-                    'code' => 2,
-                    'link' => $this->client->createAuthUrl()
-                ];
-                return $error;
+                $this->showError('Token de acesso não recebido.', E_USER_ERROR);
+                return false;
             }
-        } else {
-            $error->error = [
-                'code' => 1,
-                'link' => $this->client->createAuthUrl()
-            ];
-
-            return $error;
         }
     }
 
