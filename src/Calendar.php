@@ -1,5 +1,6 @@
 <?php
-namespace Model;
+
+namespace Calendar;
 
 class Calendar {
 
@@ -93,7 +94,21 @@ class Calendar {
             return false;
         }
         unset($validate);
+
         return true;
+    }
+
+    /**
+     * <b>revokeToken:</b> Método responsável por desassociar a conta do usuário do aplicativo
+     * @param STRING $AccessToken Se omitido, remove o token do usuário autenticado em $this->client
+     * @return BOOL TRUE se sucesso e FALSE se falha
+     */
+    public function revokeToken($AccessToken = null) {
+        if (!$AccessToken) {
+            $this->client->revokeToken();
+        } else {
+            var_dump($this->client->revokeToken($AccessToken));
+        }
     }
 
     /**
@@ -112,6 +127,7 @@ class Calendar {
             ];
             $this->fetchAccessToken(json_encode($Tokens));
             $this->client->setAccessToken(json_encode($Tokens));
+
             return $this->client;
         } else {
             if ($AccessToken) {
@@ -123,6 +139,7 @@ class Calendar {
                 if (!$RefreshToken) {
                     $this->showError('Token de atualização não recebido.', E_USER_WARNING);
                 }
+
                 return $this->client;
             } else {
                 $this->showError('Token de acesso não recebido.', E_USER_ERROR);
@@ -130,6 +147,110 @@ class Calendar {
             }
         }
     }
+    
+    /**
+     * <b>getCalendarList:</b> Adquire todos os calendários cadastrados na conta
+     * 
+     * @return ARRAY - Array com todos os dados públicos dos calendários
+     */
+    public function getCalendarList() {
+        $service = new \Google_Service_Calendar($this->client);
+        
+        return get_object_vars($service->calendarList->listCalendarList());
+    }
+    
+    /**
+     * <b>getCalendar:</b> Adquire todas as informações do calendário especificado
+     * 
+     * @param STRING $Id - ID do calendário
+     * @return ARRAY - Array com os dados públicos do calendário
+     */
+    public function getCalendar($Id) {
+        $service = new \Google_Service_Calendar($this->client);
+        
+        return get_object_vars($service->calendars->get($Id));
+    }
+    
+    /**
+     * <b>createCalendar:</b> Cria um calendário na conta do usuário
+     * 
+     * @param STRING $Name - Nome do calendário
+     * @param STRING $Description - Descrição do calendário
+     * @param STRING $Location - Localização do calendário
+     * @param STRING $TimeZone - Fuso-horário do calendário
+     * @return ARRAY - Array com os dados do calendário recém criado
+     */
+    public function createCalendar($Name, $Description = '', $Location = '', $TimeZone = CALENDAR[TIMEZONE]) {
+        $service = new \Google_Service_Calendar($this->client);
+        $calendar = new \Google_Service_Calendar_Calendar();
+        
+        $calendar->setSummary($Name);
+        
+        if(in_array($TimeZone, timezone_identifiers_list())){
+            $calendar->setTimeZone($TimeZone);
+        }
+        if($Description){
+            $calendar->setDescription($Description);
+        }
+        if($Location){
+            $calendar->setLocation($Location);
+        }
+        
+        $newCalendar = $service->calendars->insert($calendar);
+        
+        return $this->getCalendar($newCalendar->getId());
+        
+    }
+    
+    /**
+     * <b>updateCalendar:</b> Altera informações do calendário
+     * 
+     * @param STRING $Id - ID do calendário
+     * @param STRING $Name - Nome do calendário
+     * @param STRING $Description - Descrição do calendário
+     * @param STRING $Location - Localização do calendário
+     * @param STRING $TimeZone - Fuso-horário do calendário
+     * @return ARRAY - Array com os dados do calendário recém alterado
+     */
+    public function updateCalendar($Id, $Name = '', $Description = '', $Location = '', $TimeZone = CALENDAR[TIMEZONE]) {
+        $service = new \Google_Service_Calendar($this->client);
+        
+        $calendar = $service->calendars->get($Id);
+        
+        if($Name){
+            $calendar->setSummary($Name);
+        }
+        if(in_array($TimeZone, timezone_identifiers_list())){
+            $calendar->setTimeZone($TimeZone);
+        }
+        if($Description){
+            $calendar->setDescription($Description);
+        }
+        if($Location){
+            $calendar->setLocation($Location);
+        }
+        
+        $updatedCalendar = $service->calendars->update($Id, $calendar);
+        
+        return $this->getCalendar($updatedCalendar->getId());
+        
+    }
+    
+    /**
+     * <b>deleteCalendar:</b> Deleta um calendário
+     * 
+     * @param type $Id - ID do calendário
+     * @return BOOL - True se sucesso
+     */
+    public function deleteCalendar($Id) {
+        $service = new \Google_Service_Calendar($this->client);
+        
+        if($service->calendars->delete($Id)){
+            return true;
+        }
+        
+    }
+    
 
     /**
      * <b>createEvent:</b> Método responsável por criar o evento dentro do Google Calendar
