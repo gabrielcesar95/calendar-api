@@ -10,9 +10,9 @@ if (!empty($code)) {
 
     $post = [
         'code' => $code,
-        'client_id' => 'YOURCLIENTID.apps.googleusercontent.com',
-        'client_secret' => 'YOURCLIENTSECRET',
-        'redirect_uri' => 'https://YOUR.REDIRECT.URI',
+        'client_id' => CALENDAR[CLIENT_ID],
+        'client_secret' => CALENDAR[CLIENT_SECRET],
+        'redirect_uri' => CALENDAR[REDIRECT_URI],
         'grant_type' => 'authorization_code'
     ];
 
@@ -27,5 +27,5 @@ if (!empty($code)) {
         $calendar->showError('Falha ao validar parâmetros GET', E_USER_ERROR, true);
     }
     
-    header("Location: https://YOUR.REDIRECT.LOCATION");
+header("Location: " . CALENDAR[AUTH_REDIRECT]);
 }
